@@ -25,11 +25,10 @@ def config_section_map(section, config):
 
 def api_connect(config, token):
     """ Connect to API and fetch info """
-    
     # Check if to verify TLS
     tls_verify = config_section_map("general", config)['tls_verify']
 
-    # Define awx cli command
+    # Define awx cli command. -k tells cli to not verify tls
     if tls_verify == "true":
         command = ("awx metrics --conf.token "+token)
     elif tls_verify == "false":
@@ -184,8 +183,14 @@ def main():
     # Fetch token from config
     token = config_section_map("general", config)['token']
 
+    if not token:
+        dict1 = api_connect(config, token)
+        print("Error: awx cli token not defined.")
+        sys.exit(1)
+
     dict1 = api_connect(config, token)
 
+    # Set variable which indicates if something is wrong
     warning = 0
 
     result = check_jobs_running(config, dict1)
@@ -216,9 +221,7 @@ def main():
     if result == 1:
         warning = 1
 
-    if warning == 0:
-        sys.exit(0)
-    else:
+    if warning == 1:
         sys.exit(1)
 
 if __name__ == '__main__':
