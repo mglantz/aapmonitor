@@ -23,10 +23,17 @@ def config_section_map(section, config):
             dict1[option] = None
     return dict1
 
-def api_connect(token):
+def api_connect(config, token):
     """ Connect to API and fetch info """
-    # Define the awx cli command to run
-    command = ("/usr/bin/awx -k metrics --conf.token "+token)
+    
+    # Check if to verify TLS
+    tls_verify = config_section_map("general", config)['tls_verify']
+
+    # Define awx cli command
+    if tls_verify == "true":
+        command = ("awx metrics --conf.token "+token)
+    elif tls_verify == "false":
+        command = ("awx -k metrics --conf.token "+token)
 
     # Run awx cli command and fetch output
     with subprocess.Popen([command], stdout=subprocess.PIPE, shell=True) as the_process:
@@ -108,14 +115,16 @@ def check_jobs_failed(config, dict1):
 def check_forks_remaining(config, dict1):
     """ check number of forks remaining """
     forks_remaining = int(config_section_map("monitoring", config)['forks_remaining'])
-    current_forks_remaining = int(dict1['awx_instance_remaining_capacity']['samples'][0]['value'])
-
-    if current_forks_remaining > forks_remaining:
-        print("OK: Current forks remaining: ", current_forks_remaining)
-        warning = 0
-    else:
-        print("Warning: Current forks remaining: ", current_forks_remaining)
-        warning = 1
+    number_of_nodes = len(dict1['awx_instance_remaining_capacity']['samples'])
+    for node in range(number_of_nodes):
+        current_forks = int(dict1['awx_instance_remaining_capacity']['samples'][node]['value'])
+        node_name = dict1['awx_instance_remaining_capacity']['samples'][node]['labels']['hostname']
+        if current_forks > forks_remaining:
+            print("OK: Current forks on", node_name, ":", current_forks)
+            warning = 0
+        else:
+            print("Warning: Current forks on ", node_name, ": ", current_forks)
+            warning = 1
     return warning
 
 def check_subs_remaining(config, dict1):
@@ -123,7 +132,7 @@ def check_subs_remaining(config, dict1):
     subs_remaining = int(config_section_map("monitoring", config)['subs_remaining'])
     current_subs_remaining = int(dict1['awx_license_instance_free']['samples'][0]['value'])
 
-    if current_subs_remaining > subs_remaining:
+    if current_subs_remaining >= subs_remaining:
         print("OK: Current subscriptions remaining: ", current_subs_remaining)
         warning = 0
     else:
@@ -175,7 +184,7 @@ def main():
     # Fetch token from config
     token = config_section_map("general", config)['token']
 
-    dict1 = api_connect(token)
+    dict1 = api_connect(config, token)
 
     warning = 0
 
