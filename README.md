@@ -1,6 +1,5 @@
 # aapmonitor
-Ansible Automation Platform monitor script, developed on RHEL 8 for AAP 1.x (Tower 3.8.4+) but should work on AAP 2.x as well.
-It connects to whatever automation system you like which can monitor non-zero exit codes. If any issue is detected, script exits with 1.
+Ansible Automation Platform monitor script, for AAP 1.x (Tower) or 2.x (Controller). It connects to whatever automation system you like which can monitor non-zero exit codes. If any issue is detected, script exits with 1.
 
 # Howto install it
 1. Install the AAP CLI tool: https://docs.ansible.com/ansible-tower/latest/html/towercli/
