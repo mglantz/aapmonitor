@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Monitoring for Ansible Automation Platform 1.x, should work on 2.x as well but not tested.
+Monitoring for Ansible Automation Platform 1.x or 2.x.
 Author: Magnus Glantz, sudo@redhat.com, 2022
 """
 import os
